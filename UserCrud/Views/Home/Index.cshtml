@@ -1,8 +1,22 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
-
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+﻿<h1>Users</h1>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone Number</th>
+        <th>Actions</th>
+    </tr>
+    @foreach (var user in Model)
+    {
+        <tr>
+            <td>@user.Name</td>
+            <td>@user.Email</td>
+            <td>@user.Phone</td>
+            <td>
+                <a href="/Users/Edit/@user.Id">Edit</a> |
+                <a href="/Users/Delete/@user.Id">Delete</a>
+            </td>
+        </tr>
+    }
+</table>
+<a href="/Users/Create">Create New User</a>
