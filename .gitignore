@@ -1,0 +1,30 @@
+# Archivos de Visual Studio
+.vs/
+*.user
+*.suo
+*.cache
+*.csproj.user
+*.sln.docstates
+
+# Archivos de compilación y dependencias
+bin/
+obj/
+node_modules/
+
+# Configuración y archivos temporales
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.local
+
+# Publicaciones y paquetes
+wwwroot/
+dist/
+out/
+.next/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+
