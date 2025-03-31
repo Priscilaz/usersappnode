@@ -155,6 +155,12 @@
             try {
                 await fetch(`${API_URL}/new`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, phone, email, password }) });
                 showMessage("Usuario agregado.");
+                //limpio los campos
+                document.getElementById("name").value = "";
+                document.getElementById("phone").value = "";
+                document.getElementById("email").value = "";
+                document.getElementById("password").value = "";
+
                 loadUsers();
             } catch (error) {
                 showMessage("Error al agregar usuario.", false);
@@ -170,6 +176,14 @@
             try {
                 await fetch(`${API_URL}/update/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, phone, email, password }) });
                 showMessage("Usuario actualizado.");
+
+                //limpio los campos
+                document.getElementById("update-id").value = "";
+                document.getElementById("update-name").value = "";
+                document.getElementById("update-phone").value = "";
+                document.getElementById("update-email").value = "";
+                document.getElementById("update-password").value = "";
+
                 loadUsers();
             } catch (error) {
                 showMessage("Error al actualizar usuario.", false);
