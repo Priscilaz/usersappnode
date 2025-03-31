@@ -3,101 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Users Management</title>
+    <title>Gestión de Usuarios</title>
     <script defer src="app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+            button:hover {
+                background: #218838;
+            }
+
+        .form-container {
+            display: none;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #ddd;
+        }
+
+        #message {
+            margin: 10px;
+            padding: 10px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <h1>Users Management</h1>
+    <h1>Gestión de Usuarios</h1>
+    <button onclick="showCreateForm()">Crear</button>
+    <button onclick="showUpdateForm()">Actualizar</button>
+    <button onclick="showDeleteForm()">Eliminar</button>
+    <button onclick="showList()">Listar</button>
 
-    <!-- Botones para las acciones CRUD -->
-    <button onclick="showCreateForm()">Create</button>
-    <button onclick="showUpdateForm()">Update</button>
-    <button onclick="showDeleteForm()">Delete</button>
-    <button onclick="showList()">List</button>
-
-    <!-- Sección para Agregar un Usuario -->
-    <div id="create-form" style="display: none;">
-        <h2>Add User</h2>
-        <input type="text" id="name" placeholder="Name" required>
-        <input type="tel" id="phone" placeholder="Phone Number" required>
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button onclick="addUser()">Add</button>
+    <div id="create-form" class="form-container">
+        <h2>Añadir Usuario</h2>
+        <input type="text" id="name" placeholder="Nombre" required>
+        <input type="tel" id="phone" placeholder="Teléfono" required>
+        <input type="email" id="email" placeholder="Correo" required>
+        <input type="password" id="password" placeholder="Contraseña" required>
+        <button onclick="addUser()">Agregar</button>
     </div>
 
-    <!-- Sección para Actualizar un Usuario -->
-    <div id="update-form" style="display: none;">
-        <h2>Update User</h2>
-        <input type="number" id="update-id" placeholder="User ID" required>
-        <input type="text" id="update-name" placeholder="New Name">
-        <input type="tel" id="update-phone" placeholder="New Phone Number">
-        <input type="email" id="update-email" placeholder="New Email">
-        <input type="password" id="update-password" placeholder="New Password">
-        <button onclick="updateUser()">Update</button>
+    <div id="update-form" class="form-container">
+        <h2>Actualizar Usuario</h2>
+        <input type="number" id="update-id" placeholder="ID" required>
+        <input type="text" id="update-name" placeholder="Nuevo Nombre">
+        <input type="tel" id="update-phone" placeholder="Nuevo Teléfono">
+        <input type="email" id="update-email" placeholder="Nuevo Correo">
+        <input type="password" id="update-password" placeholder="Nueva Contraseña">
+        <button onclick="updateUser()">Actualizar</button>
     </div>
 
-    <!-- Sección para Eliminar un Usuario -->
-    <div id="delete-form" style="display: none;">
-        <h2>Delete User</h2>
-        <input type="number" id="delete-id" placeholder="User ID" required>
-        <button onclick="deleteUser()">Delete</button>
+    <div id="delete-form" class="form-container">
+        <h2>Eliminar Usuario</h2>
+        <input type="number" id="delete-id" placeholder="ID" required>
+        <button onclick="deleteUser()">Eliminar</button>
     </div>
 
-    <!-- Tabla para Mostrar la Lista de Usuarios -->
-    <div id="user-list" style="display: none;">
-        <h2>User List</h2>
-        <table border="1">
+    <div id="user-list" class="form-container">
+        <h2>Lista de Usuarios</h2>
+        <table>
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Phone Number</th>
-                    <th>Email</th>
-                    <th>Password</th>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Correo</th>
+                    <th>Contraseña</th>
                 </tr>
             </thead>
             <tbody id="users-list"></tbody>
         </table>
     </div>
 
-    <div id="message" style="display: none;"></div> <!-- Mensajes de estado -->
+    <div id="message"></div>
 
     <script>
         const API_URL = "http://localhost:5166/api/usersapp";
-
-        // Mostrar formulario para crear un usuario
-        function showCreateForm() {
-            resetForms();
-            document.getElementById("create-form").style.display = "block";
-        }
-
-        // Mostrar formulario para actualizar un usuario
-        function showUpdateForm() {
-            resetForms();
-            document.getElementById("update-form").style.display = "block";
-        }
-
-        // Mostrar formulario para eliminar un usuario
-        function showDeleteForm() {
-            resetForms();
-            document.getElementById("delete-form").style.display = "block";
-        }
-
-        // Mostrar lista de usuarios
-        function showList() {
-            resetForms();
-            document.getElementById("user-list").style.display = "block";
-            loadUsers();
-        }
-
-        // Ocultar todos los formularios
         function resetForms() {
-            document.getElementById("create-form").style.display = "none";
-            document.getElementById("update-form").style.display = "none";
-            document.getElementById("delete-form").style.display = "none";
-            document.getElementById("user-list").style.display = "none";
+            document.querySelectorAll('.form-container').forEach(div => div.style.display = 'none');
         }
-
-        // Mostrar mensajes de éxito o error
+        function showCreateForm() { resetForms(); document.getElementById("create-form").style.display = "block"; }
+        function showUpdateForm() { resetForms(); document.getElementById("update-form").style.display = "block"; }
+        function showDeleteForm() { resetForms(); document.getElementById("delete-form").style.display = "block"; }
+        function showList() { resetForms(); document.getElementById("user-list").style.display = "block"; loadUsers(); }
         function showMessage(message, isSuccess = true) {
             const messageDiv = document.getElementById("message");
             messageDiv.style.display = "block";
@@ -105,8 +126,6 @@
             messageDiv.innerHTML = message;
             setTimeout(() => messageDiv.style.display = "none", 3000);
         }
-
-        // Cargar usuarios desde el backend
         async function loadUsers() {
             try {
                 const response = await fetch(`${API_URL}/list`);
@@ -121,80 +140,53 @@
                         </tr>
                     `).join("");
             } catch (error) {
-                showMessage("Error al cargar la lista de usuarios.", false);
+                showMessage("Error al cargar la lista.", false);
             }
         }
-
-        // Agregar un usuario
         async function addUser() {
             const name = document.getElementById("name").value;
             const phone = document.getElementById("phone").value;
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
-
             if (!name || !phone || !email || !password) {
-                showMessage("Todos los campos son requeridos.", false);
+                showMessage("Todos los campos son obligatorios.", false);
                 return;
             }
-
             try {
-                await fetch(`${API_URL}/new`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, phone, email, password }),
-                });
-
-                showMessage("Usuario agregado con éxito.");
-                loadUsers();  // Actualizar la lista de usuarios
+                await fetch(`${API_URL}/new`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, phone, email, password }) });
+                showMessage("Usuario agregado.");
+                loadUsers();
             } catch (error) {
-                showMessage("Error al agregar el usuario.", false);
+                showMessage("Error al agregar usuario.", false);
             }
         }
-
-        // Actualizar un usuario
         async function updateUser() {
             const id = document.getElementById("update-id").value;
+            if (!id) { showMessage("El ID es obligatorio.", false); return; }
             const name = document.getElementById("update-name").value;
             const phone = document.getElementById("update-phone").value;
             const email = document.getElementById("update-email").value;
             const password = document.getElementById("update-password").value;
-
-            if (!id) {
-                showMessage("El ID del usuario es requerido.", false);
-                return;
-            }
-
             try {
-                await fetch(`${API_URL}/update/${id}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, phone, email, password }),
-                });
-
-                showMessage("Usuario actualizado con éxito.");
-                loadUsers();  // Actualizar la lista de usuarios
+                await fetch(`${API_URL}/update/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, phone, email, password }) });
+                showMessage("Usuario actualizado.");
+                loadUsers();
             } catch (error) {
-                showMessage("Error al actualizar el usuario.", false);
+                showMessage("Error al actualizar usuario.", false);
             }
         }
-
-        // Eliminar un usuario
         async function deleteUser() {
             const id = document.getElementById("delete-id").value;
-
-            if (!id) {
-                showMessage("El ID del usuario es requerido.", false);
-                return;
-            }
-
+            if (!id) { showMessage("El ID es obligatorio.", false); return; }
             try {
                 await fetch(`${API_URL}/delete/${id}`, { method: "DELETE" });
-                showMessage("Usuario eliminado con éxito.");
-                loadUsers();  // Actualizar la lista de usuarios
+                showMessage("Usuario eliminado.");
+                loadUsers();
             } catch (error) {
-                showMessage("Error al eliminar el usuario.", false);
+                showMessage("Error al eliminar usuario.", false);
             }
         }
     </script>
 </body>
 </html>
+
