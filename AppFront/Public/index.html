@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users Management</title>
+    <script defer src="app.js"></script>
+</head>
+<body>
+    <h1>Users Management</h1>
+
+    <!-- Botones para las acciones CRUD -->
+    <button onclick="showCreateForm()">Create</button>
+    <button onclick="showUpdateForm()">Update</button>
+    <button onclick="showDeleteForm()">Delete</button>
+    <button onclick="showList()">List</button>
+
+    <!-- Sección para Agregar un Usuario -->
+    <div id="create-form" style="display: none;">
+        <h2>Add User</h2>
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="tel" id="phone" placeholder="Phone Number" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button onclick="addUser()">Add</button>
+    </div>
+
+    <!-- Sección para Actualizar un Usuario -->
+    <div id="update-form" style="display: none;">
+        <h2>Update User</h2>
+        <input type="number" id="update-id" placeholder="User ID" required>
+        <input type="text" id="update-name" placeholder="New Name">
+        <input type="tel" id="update-phone" placeholder="New Phone Number">
+        <input type="email" id="update-email" placeholder="New Email">
+        <input type="password" id="update-password" placeholder="New Password">
+        <button onclick="updateUser()">Update</button>
+    </div>
+
+    <!-- Sección para Eliminar un Usuario -->
+    <div id="delete-form" style="display: none;">
+        <h2>Delete User</h2>
+        <input type="number" id="delete-id" placeholder="User ID" required>
+        <button onclick="deleteUser()">Delete</button>
+    </div>
+
+    <!-- Tabla para Mostrar la Lista de Usuarios -->
+    <div id="user-list" style="display: none;">
+        <h2>User List</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone Number</th>
+                    <th>Email</th>
+                    <th>Password</th>
+                </tr>
+            </thead>
+            <tbody id="users-list"></tbody>
+        </table>
+    </div>
+
+    <div id="message" style="display: none;"></div> <!-- Mensajes de estado -->
+
+    <script>
+        const API_URL = "http://localhost:5166/api/usersapp";
+
+        // Mostrar formulario para crear un usuario
+        function showCreateForm() {
+            resetForms();
+            document.getElementById("create-form").style.display = "block";
+        }
+
+        // Mostrar formulario para actualizar un usuario
+        function showUpdateForm() {
+            resetForms();
+            document.getElementById("update-form").style.display = "block";
+        }
+
+        // Mostrar formulario para eliminar un usuario
+        function showDeleteForm() {
+            resetForms();
+            document.getElementById("delete-form").style.display = "block";
+        }
+
+        // Mostrar lista de usuarios
+        function showList() {
+            resetForms();
+            document.getElementById("user-list").style.display = "block";
+            loadUsers();
+        }
+
+        // Ocultar todos los formularios
+        function resetForms() {
+            document.getElementById("create-form").style.display = "none";
+            document.getElementById("update-form").style.display = "none";
+            document.getElementById("delete-form").style.display = "none";
+            document.getElementById("user-list").style.display = "none";
+        }
+
+        // Mostrar mensajes de éxito o error
+        function showMessage(message, isSuccess = true) {
+            const messageDiv = document.getElementById("message");
+            messageDiv.style.display = "block";
+            messageDiv.style.color = isSuccess ? "green" : "red";
+            messageDiv.innerHTML = message;
+            setTimeout(() => messageDiv.style.display = "none", 3000);
+        }
+
+        // Cargar usuarios desde el backend
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_URL}/list`);
+                const users = await response.json();
+                const usersList = document.getElementById("users-list");
+                usersList.innerHTML = users.map(user => `
+                        <tr>
+                            <td>${user.name}</td>
+                            <td>${user.phone}</td>
+                            <td>${user.email}</td>
+                            <td>${user.password}</td>
+                        </tr>
+                    `).join("");
+            } catch (error) {
+                showMessage("Error al cargar la lista de usuarios.", false);
+            }
+        }
+
+        // Agregar un usuario
+        async function addUser() {
+            const name = document.getElementById("name").value;
+            const phone = document.getElementById("phone").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            if (!name || !phone || !email || !password) {
+                showMessage("Todos los campos son requeridos.", false);
+                return;
+            }
+
+            try {
+                await fetch(`${API_URL}/new`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, phone, email, password }),
+                });
+
+                showMessage("Usuario agregado con éxito.");
+                loadUsers();  // Actualizar la lista de usuarios
+            } catch (error) {
+                showMessage("Error al agregar el usuario.", false);
+            }
+        }
+
+        // Actualizar un usuario
+        async function updateUser() {
+            const id = document.getElementById("update-id").value;
+            const name = document.getElementById("update-name").value;
+            const phone = document.getElementById("update-phone").value;
+            const email = document.getElementById("update-email").value;
+            const password = document.getElementById("update-password").value;
+
+            if (!id) {
+                showMessage("El ID del usuario es requerido.", false);
+                return;
+            }
+
+            try {
+                await fetch(`${API_URL}/update/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, phone, email, password }),
+                });
+
+                showMessage("Usuario actualizado con éxito.");
+                loadUsers();  // Actualizar la lista de usuarios
+            } catch (error) {
+                showMessage("Error al actualizar el usuario.", false);
+            }
+        }
+
+        // Eliminar un usuario
+        async function deleteUser() {
+            const id = document.getElementById("delete-id").value;
+
+            if (!id) {
+                showMessage("El ID del usuario es requerido.", false);
+                return;
+            }
+
+            try {
+                await fetch(`${API_URL}/delete/${id}`, { method: "DELETE" });
+                showMessage("Usuario eliminado con éxito.");
+                loadUsers();  // Actualizar la lista de usuarios
+            } catch (error) {
+                showMessage("Error al eliminar el usuario.", false);
+            }
+        }
+    </script>
+</body>
+</html>

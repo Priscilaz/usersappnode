@@ -3,35 +3,46 @@ using UserCrud.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-// Add services to the container.
+// Agregar servicios al contenedor
 builder.Services.AddControllers();
 
-//BDD
-//builder.Services.AddDbContext<AppDbContext>(options =>
-    //options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Configurar CORS para permitir solicitudes desde el frontend en el puerto 3000
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://localhost:3000") // Permite solicitudes desde el frontend
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                      });
+});
+
+// BDD
+// builder.Services.AddDbContext<AppDbContext>(options =>
+//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
-
-// Configure the HTTP request pipeline.
+// Configurar el pipeline de solicitudes HTTP
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.MapControllers();
+
 app.UseRouting();
+
+// Habilitar CORS antes de la autorización
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthorization();
 
-//app.MapControllerRoute(
-//    name: "default",
-//    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapControllers();
 
 app.Run();

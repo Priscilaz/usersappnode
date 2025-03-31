@@ -24,7 +24,7 @@ namespace UserCrud.Controllers
             {
                 return BadRequest("User is null");
             }
-
+            user.Id = _users.Count == 0 ? 1 : _users.Max(u => u.Id) + 1;
             _users.Add(user);
             return CreatedAtAction(nameof(List), new { id = user.Id }, user); 
         }
