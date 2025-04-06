@@ -10,10 +10,24 @@ namespace UserCrud.Controllers
         private static List<User> _users = new List<User>();
 
         //Read
+        //[HttpGet("list")]
+        //public IActionResult List()
+        //{
+        //    return Ok(_users);  
+        //}
+        //Read
         [HttpGet("list")]
         public IActionResult List()
         {
-            return Ok(_users);  
+            var userDTOs = _users.Select(user => new UserDTO
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                Phone = user.Phone
+            }).ToList();
+
+            return Ok(userDTOs);
         }
 
         //Create
