@@ -59,15 +59,32 @@
             padding: 10px;
             display: none;
         }
+
+        #crud-buttons {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1>Gestión de Usuarios</h1>
-    <button onclick="showCreateForm()">Crear</button>
-    <button onclick="showUpdateForm()">Actualizar</button>
-    <button onclick="showDeleteForm()">Eliminar</button>
-    <button onclick="showList()">Listar</button>
 
+    <!-- LOGIN -->
+    <div id="login-form" class="form-container">
+        <h2>Iniciar Sesión</h2>
+        <input type="email" id="login-email" placeholder="Correo" required>
+        <input type="password" id="login-password" placeholder="Contraseña" required>
+        <button onclick="loginUser()">Ingresar</button>
+    </div>
+
+    <!-- CRUD Botones -->
+    <div id="crud-buttons">
+        <button onclick="showCreateForm()">Crear</button>
+        <button onclick="showUpdateForm()">Actualizar</button>
+        <button onclick="showDeleteForm()">Eliminar</button>
+        <button onclick="showList()">Listar</button>
+    </div>
+
+    <!-- CRUD Formularios -->
     <div id="create-form" class="form-container">
         <h2>Añadir Usuario</h2>
         <input type="text" id="name" placeholder="Nombre" required>
@@ -101,7 +118,6 @@
                     <th>Nombre</th>
                     <th>Teléfono</th>
                     <th>Correo</th>
-                    <!--<th>Contraseña</th>-->
                 </tr>
             </thead>
             <tbody id="users-list"></tbody>
@@ -112,13 +128,37 @@
 
     <script>
         const API_URL = "http://localhost:5166/api/usersapp";
+
+        window.onload = () => {
+            resetForms();
+            document.getElementById("login-form").style.display = "block";
+        };
+
         function resetForms() {
             document.querySelectorAll('.form-container').forEach(div => div.style.display = 'none');
         }
-        function showCreateForm() { resetForms(); document.getElementById("create-form").style.display = "block"; }
-        function showUpdateForm() { resetForms(); document.getElementById("update-form").style.display = "block"; }
-        function showDeleteForm() { resetForms(); document.getElementById("delete-form").style.display = "block"; }
-        function showList() { resetForms(); document.getElementById("user-list").style.display = "block"; loadUsers(); }
+
+        function showCreateForm() {
+            resetForms();
+            document.getElementById("create-form").style.display = "block";
+        }
+
+        function showUpdateForm() {
+            resetForms();
+            document.getElementById("update-form").style.display = "block";
+        }
+
+        function showDeleteForm() {
+            resetForms();
+            document.getElementById("delete-form").style.display = "block";
+        }
+
+        function showList() {
+            resetForms();
+            document.getElementById("user-list").style.display = "block";
+            loadUsers();
+        }
+
         function showMessage(message, isSuccess = true) {
             const messageDiv = document.getElementById("message");
             messageDiv.style.display = "block";
@@ -126,6 +166,41 @@
             messageDiv.innerHTML = message;
             setTimeout(() => messageDiv.style.display = "none", 3000);
         }
+
+        async function loginUser() {
+            const email = document.getElementById("login-email").value;
+            const password = document.getElementById("login-password").value;
+
+            if (!email || !password) {
+                showMessage("Por favor, ingresa correo y contraseña.", false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) {
+                    showMessage("Credenciales incorrectas.", false);
+                    return;
+                }
+
+                const result = await response.json();
+
+                showMessage("Login exitoso. Bienvenido/a " + result.user.name);
+                document.getElementById("login-form").style.display = "none";
+                document.getElementById("crud-buttons").style.display = "block";
+                showList();
+
+            } catch (error) {
+                showMessage("Error al iniciar sesión.", false);
+                console.error(error);
+            }
+        }
+
         async function loadUsers() {
             try {
                 const response = await fetch(`${API_URL}/list`);
@@ -136,27 +211,33 @@
                             <td>${user.name}</td>
                             <td>${user.phone}</td>
                             <td>${user.email}</td>
-                           
                         </tr>
                     `).join("");
             } catch (error) {
                 showMessage("Error al cargar la lista.", false);
             }
         }
+
         async function addUser() {
             const name = document.getElementById("name").value;
             const phone = document.getElementById("phone").value;
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
+
             if (!name || !phone || !email || !password) {
                 showMessage("Todos los campos son obligatorios.", false);
                 return;
             }
+
             try {
-                const user = { name, phone, email, password };
-                await fetch(`${API_URL}/new`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, phone, email, password }) });
+                await fetch(`${API_URL}/new`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, phone, email, password })
+                });
+
                 showMessage("Usuario agregado.");
-                //limpio los campos
+
                 document.getElementById("name").value = "";
                 document.getElementById("phone").value = "";
                 document.getElementById("email").value = "";
@@ -167,23 +248,33 @@
                 showMessage("Error al agregar usuario.", false);
             }
         }
+
         async function updateUser() {
             const id = document.getElementById("update-id").value;
-            if (!id) { showMessage("El ID es obligatorio.", false); return; }
+            if (!id) {
+                showMessage("El ID es obligatorio.", false);
+                return;
+            }
+
             const name = document.getElementById("update-name").value;
             const phone = document.getElementById("update-phone").value;
             const email = document.getElementById("update-email").value;
             const password = document.getElementById("update-password").value;
+
             const data = { name, phone, email };
-            if (password) { // Solo enviar contraseña si se proporciona
+            if (password) {
                 data.password = password;
             }
 
             try {
-                await fetch(`${API_URL}/update/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, phone, email, password }) });
+                await fetch(`${API_URL}/update/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, phone, email, password })
+                });
+
                 showMessage("Usuario actualizado.");
 
-                //limpio los campos
                 document.getElementById("update-id").value = "";
                 document.getElementById("update-name").value = "";
                 document.getElementById("update-phone").value = "";
@@ -195,9 +286,14 @@
                 showMessage("Error al actualizar usuario.", false);
             }
         }
+
         async function deleteUser() {
             const id = document.getElementById("delete-id").value;
-            if (!id) { showMessage("El ID es obligatorio.", false); return; }
+            if (!id) {
+                showMessage("El ID es obligatorio.", false);
+                return;
+            }
+
             try {
                 await fetch(`${API_URL}/delete/${id}`, { method: "DELETE" });
                 showMessage("Usuario eliminado.");
@@ -209,4 +305,5 @@
     </script>
 </body>
 </html>
+
 

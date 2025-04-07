@@ -5,9 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UserCrud.Data;
 using Microsoft.AspNetCore.Identity;
-using System.Security.Cryptography;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
-using System.Text;
+using System;
 
 namespace UserCrud.Controllers
 {
@@ -24,7 +22,7 @@ namespace UserCrud.Controllers
             _passwordHasher = passwordHasher;
         }
 
-        // Read
+        // GET: api/usersapp/list
         [HttpGet("list")]
         public async Task<IActionResult> List()
         {
@@ -41,30 +39,30 @@ namespace UserCrud.Controllers
             return Ok(users);
         }
 
-        // Create
+        // POST: api/usersapp/new
         [HttpPost("new")]
         public async Task<IActionResult> Create([FromBody] UserDTO userDTO)
         {
-
             if (!ModelState.IsValid || string.IsNullOrWhiteSpace(userDTO.Password))
             {
                 return BadRequest("Datos inválidos o contraseña vacía.");
             }
 
-            var hashedPassword = HashPassword(userDTO.Password);
-
             var user = new User
             {
                 Name = userDTO.Name,
                 Phone = userDTO.Phone,
-                Email = userDTO.Email,
-                PasswordHash = hashedPassword
+                Email = userDTO.Email
             };
+
+            // Hashear la contraseña
+            user.PasswordHash = _passwordHasher.HashPassword(user, userDTO.Password);
 
             try
             {
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
+                return CreatedAtAction(nameof(List), new { id = user.Id }, user);
             }
             catch (Exception ex)
             {
@@ -72,22 +70,10 @@ namespace UserCrud.Controllers
                 return StatusCode(500, $"Error guardando usuario: {detailedMessage}");
             }
 
-
-            //_context.Users.Add(user);
-            //await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(List), new { id = user.Id }, user);
-        }
-        private string HashPassword(string password)
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hashBytes);
-            }
+            
         }
 
-        // Update
+        // PUT: api/usersapp/update/{id}
         [HttpPut("update/{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UserDTO userDTO)
         {
@@ -110,7 +96,7 @@ namespace UserCrud.Controllers
             return NoContent();
         }
 
-        // Delete
+        // DELETE: api/usersapp/delete/{id}
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -123,6 +109,41 @@ namespace UserCrud.Controllers
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        // POST: api/usersapp/login
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
+        {
+            if (string.IsNullOrWhiteSpace(loginDTO.Email) || string.IsNullOrWhiteSpace(loginDTO.Password))
+            {
+                return BadRequest("Email y contraseña son obligatorios.");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDTO.Email);
+            if (user == null)
+            {
+                return Unauthorized("Credenciales inválidas.");
+            }
+
+            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, loginDTO.Password);
+
+            if (result == PasswordVerificationResult.Failed)
+            {
+                return Unauthorized("Credenciales inválidas.");
+            }
+
+            return Ok(new
+            {
+                message = "Login exitoso",
+                user = new
+                {
+                    user.Id,
+                    user.Name,
+                    user.Email,
+                    user.Phone
+                }
+            });
         }
     }
 }
