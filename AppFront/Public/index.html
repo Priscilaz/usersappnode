@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gestión de Usuarios</title>
     <script defer src="app.js"></script>
     <style>
@@ -68,12 +68,28 @@
 <body>
     <h1>Gestión de Usuarios</h1>
 
+    <!-- BOTONES LOGIN / REGISTRO -->
+    <div id="access-buttons">
+        <button onclick="showLoginForm()">Iniciar Sesión</button>
+        <button onclick="showRegisterForm()">Registrarse</button>
+    </div>
+
     <!-- LOGIN -->
     <div id="login-form" class="form-container">
         <h2>Iniciar Sesión</h2>
-        <input type="email" id="login-email" placeholder="Correo" required>
-        <input type="password" id="login-password" placeholder="Contraseña" required>
+        <input type="email" id="login-email" placeholder="Correo" required />
+        <input type="password" id="login-password" placeholder="Contraseña" required />
         <button onclick="loginUser()">Ingresar</button>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="register-form" class="form-container">
+        <h2>Registrarse</h2>
+        <input type="text" id="register-name" placeholder="Nombre" required />
+        <input type="tel" id="register-phone" placeholder="Teléfono" required />
+        <input type="email" id="register-email" placeholder="Correo" required />
+        <input type="password" id="register-password" placeholder="Contraseña" required />
+        <button onclick="registerUser()">Crear cuenta</button>
     </div>
 
     <!-- CRUD Botones -->
@@ -82,31 +98,32 @@
         <button onclick="showUpdateForm()">Actualizar</button>
         <button onclick="showDeleteForm()">Eliminar</button>
         <button onclick="showList()">Listar</button>
+        <button onclick="logout()">Cerrar sesión</button>
     </div>
 
     <!-- CRUD Formularios -->
     <div id="create-form" class="form-container">
         <h2>Añadir Usuario</h2>
-        <input type="text" id="name" placeholder="Nombre" required>
-        <input type="tel" id="phone" placeholder="Teléfono" required>
-        <input type="email" id="email" placeholder="Correo" required>
-        <input type="password" id="password" placeholder="Contraseña" required>
+        <input type="text" id="name" placeholder="Nombre" required />
+        <input type="tel" id="phone" placeholder="Teléfono" required />
+        <input type="email" id="email" placeholder="Correo" required />
+        <input type="password" id="password" placeholder="Contraseña" required />
         <button onclick="addUser()">Agregar</button>
     </div>
 
     <div id="update-form" class="form-container">
         <h2>Actualizar Usuario</h2>
-        <input type="number" id="update-id" placeholder="ID" required>
-        <input type="text" id="update-name" placeholder="Nuevo Nombre">
-        <input type="tel" id="update-phone" placeholder="Nuevo Teléfono">
-        <input type="email" id="update-email" placeholder="Nuevo Correo">
-        <input type="password" id="update-password" placeholder="Nueva Contraseña">
+        <input type="number" id="update-id" placeholder="ID" required />
+        <input type="text" id="update-name" placeholder="Nuevo Nombre" />
+        <input type="tel" id="update-phone" placeholder="Nuevo Teléfono" />
+        <input type="email" id="update-email" placeholder="Nuevo Correo" />
+        <input type="password" id="update-password" placeholder="Nueva Contraseña" />
         <button onclick="updateUser()">Actualizar</button>
     </div>
 
     <div id="delete-form" class="form-container">
         <h2>Eliminar Usuario</h2>
-        <input type="number" id="delete-id" placeholder="ID" required>
+        <input type="number" id="delete-id" placeholder="ID" required />
         <button onclick="deleteUser()">Eliminar</button>
     </div>
 
@@ -131,11 +148,22 @@
 
         window.onload = () => {
             resetForms();
+            document.getElementById("access-buttons").style.display = "block";
             document.getElementById("login-form").style.display = "block";
         };
 
         function resetForms() {
-            document.querySelectorAll('.form-container').forEach(div => div.style.display = 'none');
+            document.querySelectorAll(".form-container").forEach(div => div.style.display = "none");
+        }
+
+        function showLoginForm() {
+            resetForms();
+            document.getElementById("login-form").style.display = "block";
+        }
+
+        function showRegisterForm() {
+            resetForms();
+            document.getElementById("register-form").style.display = "block";
         }
 
         function showCreateForm() {
@@ -157,6 +185,14 @@
             resetForms();
             document.getElementById("user-list").style.display = "block";
             loadUsers();
+        }
+
+        function logout() {
+            resetForms();
+            document.getElementById("crud-buttons").style.display = "none";
+            document.getElementById("access-buttons").style.display = "block";
+            document.getElementById("login-form").style.display = "block";
+            showMessage("Sesión cerrada correctamente.");
         }
 
         function showMessage(message, isSuccess = true) {
@@ -192,11 +228,50 @@
 
                 showMessage("Login exitoso. Bienvenido/a " + result.user.name);
                 document.getElementById("login-form").style.display = "none";
+                document.getElementById("access-buttons").style.display = "none";
                 document.getElementById("crud-buttons").style.display = "block";
                 showList();
 
             } catch (error) {
                 showMessage("Error al iniciar sesión.", false);
+                console.error(error);
+            }
+        }
+
+        async function registerUser() {
+            const name = document.getElementById("register-name").value;
+            const phone = document.getElementById("register-phone").value;
+            const email = document.getElementById("register-email").value;
+            const password = document.getElementById("register-password").value;
+
+            if (!name || !phone || !email || !password) {
+                showMessage("Todos los campos son obligatorios para registrarse.", false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/new`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, phone, email, password })
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    showMessage("Error al registrarse: " + error, false);
+                    return;
+                }
+
+                showMessage("Registro exitoso. Ahora puedes iniciar sesión.");
+                document.getElementById("register-name").value = "";
+                document.getElementById("register-phone").value = "";
+                document.getElementById("register-email").value = "";
+                document.getElementById("register-password").value = "";
+
+                showLoginForm();
+
+            } catch (error) {
+                showMessage("Error al registrarse.", false);
                 console.error(error);
             }
         }
@@ -207,12 +282,12 @@
                 const users = await response.json();
                 const usersList = document.getElementById("users-list");
                 usersList.innerHTML = users.map(user => `
-                        <tr>
-                            <td>${user.name}</td>
-                            <td>${user.phone}</td>
-                            <td>${user.email}</td>
-                        </tr>
-                    `).join("");
+              <tr>
+                <td>${user.name}</td>
+                <td>${user.phone}</td>
+                <td>${user.email}</td>
+              </tr>
+            `).join("");
             } catch (error) {
                 showMessage("Error al cargar la lista.", false);
             }
@@ -237,12 +312,10 @@
                 });
 
                 showMessage("Usuario agregado.");
-
                 document.getElementById("name").value = "";
                 document.getElementById("phone").value = "";
                 document.getElementById("email").value = "";
                 document.getElementById("password").value = "";
-
                 loadUsers();
             } catch (error) {
                 showMessage("Error al agregar usuario.", false);
@@ -270,17 +343,15 @@
                 await fetch(`${API_URL}/update/${id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, phone, email, password })
+                    body: JSON.stringify(data)
                 });
 
                 showMessage("Usuario actualizado.");
-
                 document.getElementById("update-id").value = "";
                 document.getElementById("update-name").value = "";
                 document.getElementById("update-phone").value = "";
                 document.getElementById("update-email").value = "";
                 document.getElementById("update-password").value = "";
-
                 loadUsers();
             } catch (error) {
                 showMessage("Error al actualizar usuario.", false);
@@ -305,5 +376,3 @@
     </script>
 </body>
 </html>
-
-
