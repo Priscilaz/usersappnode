@@ -153,6 +153,7 @@
                 return;
             }
             try {
+                const user = { name, phone, email, password };
                 await fetch(`${API_URL}/new`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, phone, email, password }) });
                 showMessage("Usuario agregado.");
                 //limpio los campos
@@ -173,6 +174,11 @@
             const phone = document.getElementById("update-phone").value;
             const email = document.getElementById("update-email").value;
             const password = document.getElementById("update-password").value;
+            const data = { name, phone, email };
+            if (password) { // Solo enviar contraseña si se proporciona
+                data.password = password;
+            }
+
             try {
                 await fetch(`${API_URL}/update/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, phone, email, password }) });
                 showMessage("Usuario actualizado.");

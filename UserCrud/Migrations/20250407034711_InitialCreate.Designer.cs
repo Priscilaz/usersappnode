@@ -11,7 +11,7 @@ using UserCrud.Data;
 namespace UserCrud.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250406232700_InitialCreate")]
+    [Migration("20250407034711_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -40,7 +40,7 @@ namespace UserCrud.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

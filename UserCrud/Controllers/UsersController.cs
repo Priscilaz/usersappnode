@@ -4,6 +4,10 @@ using UserCrud.Models;
 using System.Linq;
 using System.Threading.Tasks;
 using UserCrud.Data;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using System.Text;
 
 namespace UserCrud.Controllers
 {
@@ -12,10 +16,12 @@ namespace UserCrud.Controllers
     public class UsersController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public UsersController(AppDbContext context)
+        public UsersController(AppDbContext context, IPasswordHasher<User> passwordHasher)
         {
             _context = context;
+            _passwordHasher = passwordHasher;
         }
 
         // Read
@@ -37,22 +43,53 @@ namespace UserCrud.Controllers
 
         // Create
         [HttpPost("new")]
-        public async Task<IActionResult> Create([FromBody] User user)
+        public async Task<IActionResult> Create([FromBody] UserDTO userDTO)
         {
-            if (user == null)
+
+            if (!ModelState.IsValid || string.IsNullOrWhiteSpace(userDTO.Password))
             {
-                return BadRequest("User is null");
+                return BadRequest("Datos inválidos o contraseña vacía.");
             }
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            var hashedPassword = HashPassword(userDTO.Password);
+
+            var user = new User
+            {
+                Name = userDTO.Name,
+                Phone = userDTO.Phone,
+                Email = userDTO.Email,
+                PasswordHash = hashedPassword
+            };
+
+            try
+            {
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                var detailedMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return StatusCode(500, $"Error guardando usuario: {detailedMessage}");
+            }
+
+
+            //_context.Users.Add(user);
+            //await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(List), new { id = user.Id }, user);
+        }
+        private string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashBytes);
+            }
         }
 
         // Update
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] User user)
+        public async Task<IActionResult> Update(int id, [FromBody] UserDTO userDTO)
         {
             var existingUser = await _context.Users.FindAsync(id);
             if (existingUser == null)
@@ -60,10 +97,14 @@ namespace UserCrud.Controllers
                 return NotFound();
             }
 
-            existingUser.Name = user.Name;
-            existingUser.Email = user.Email;
-            existingUser.Phone = user.Phone;
-            // existingUser.Password = user.Password; // No actualizar la contraseña aquí
+            existingUser.Name = userDTO.Name;
+            existingUser.Email = userDTO.Email;
+            existingUser.Phone = userDTO.Phone;
+
+            if (!string.IsNullOrEmpty(userDTO.Password))
+            {
+                existingUser.PasswordHash = _passwordHasher.HashPassword(existingUser, userDTO.Password);
+            }
 
             await _context.SaveChangesAsync();
             return NoContent();

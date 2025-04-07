@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace UserCrud.Models
 {
@@ -13,15 +14,13 @@ namespace UserCrud.Models
 
         [Required]
         public string Phone { get; set; }
+
         [Required]
         [EmailAddress]
         public string Email { get; set; }
 
         [Required]
-        [PasswordPropertyText]
-        [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres")]
-        public string Password { get; set; }
-
-        
+        public string PasswordHash { get; set; }
     }
+
 }
