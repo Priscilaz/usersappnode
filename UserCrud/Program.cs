@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:3000") // Permite solicitudes desde el frontend
+                          policy.WithOrigins("https://usersapp-frontview.azurewebsites.net") // Permite solicitudes desde el frontend
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
