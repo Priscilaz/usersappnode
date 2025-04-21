@@ -1,0 +1,31 @@
+name: Deploy static frontend to Azure Web App
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_90442B88D69D435B8D770E0D7AED0EF4 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_D2FAA8A4FCC9437CA79809B51644493A }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_A8B599EF027C440A849421A7C6A5F4CA }}
+
+      - name: Deploy static files to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'usersapp-frontview'
+          slot-name: 'Production'
+          package: AppFront/Public
